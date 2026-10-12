@@ -34,8 +34,26 @@ app.config['SIGNUP_ENABLED'] = os.environ.get('SIGNUP_ENABLED', '1') != '0'
 app.config['TRIAL_DAYS'] = int(os.environ.get('TRIAL_DAYS', '14'))
 app.config['SUPPORT_CONTACT'] = os.environ.get('SUPPORT_CONTACT', '')  # e.g. "98765 43210" shown for renewals
 
+if IS_PROD and not (os.environ.get('DATABASE_PATH') and os.environ.get('UPLOAD_DIR')):
+    # Without these the database and photos land on Render's temporary disk and vanish on the next deploy.
+    raise RuntimeError('DATABASE_PATH aur UPLOAD_DIR set karna zaroori hai (jaise /var/data/sunaar.db aur /var/data/uploads), '
+                       'aur Render ki persistent disk usi /var/data par lagi honi chahiye. Warna restart par saara data mit jayega.')
+
 DATABASE = os.environ.get('DATABASE_PATH', 'sunaar.db')
 UPLOAD_DIR = os.environ.get('UPLOAD_DIR', 'uploads')
+
+if IS_PROD:
+    _problems = []
+    for _label, _path in (('DATABASE_PATH', DATABASE), ('UPLOAD_DIR', UPLOAD_DIR)):
+        _folder = os.path.dirname(os.path.abspath(_path))
+        if not os.path.isdir(_folder):
+            _problems.append(f'{_label}={_path} (folder {_folder} maujood nahin hai)')
+        elif not os.access(_folder, os.W_OK):
+            _problems.append(f'{_label}={_path} (folder {_folder} mein likhne ki permission nahin hai)')
+    if _problems:
+        raise RuntimeError('Storage ready nahin hai: ' + '; '.join(_problems) + '. '
+                           'Render > Disks mein disk ki Mount Path wahi honi chahiye jo in paths ka folder hai '
+                           '(jaise /var/data), aur instance type paid (Starter ya upar) hona chahiye.')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 

@@ -53,7 +53,7 @@ if IS_PROD:
     if _problems:
         raise RuntimeError('Storage ready nahin hai: ' + '; '.join(_problems) + '. '
                            'Render > Disks mein disk ki Mount Path wahi honi chahiye jo in paths ka folder hai '
-                           '(jaise /var/data), aur instance type paid (Starter) hona chahiye.')
+                           '(jaise /var/data), aur instance type paid (Starter ya upar) hona chahiye.')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
@@ -154,7 +154,10 @@ def init_db():
             pw = 'super123'
         c.execute("INSERT INTO users (shop_id, username, full_name, password_hash, role) VALUES (NULL, ?, ?, ?, 'superadmin')",
                   ('superadmin', 'Super Admin', generate_password_hash(pw)))
-        print(f"\n*** Super admin created -> username: superadmin  password: {pw}  (CHANGE IT!) ***\n")
+        if IS_PROD:   # never write the real password into Render's logs
+            print('*** Super admin created (username: superadmin, password: the SUPERADMIN_PASSWORD you set) ***')
+        else:
+            print(f"\n*** Super admin created -> username: superadmin  password: {pw}  (CHANGE IT!) ***\n")
     conn.commit()
     conn.close()
 

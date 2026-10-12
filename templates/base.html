@@ -1,0 +1,87 @@
+{% from "_macros.html" import icon %}<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#16254a">
+<title>{% block title %}Sunaar{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700&family=Rozha+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+{% if g.user %}
+{% set role = g.user['role'] %}
+{% set ep = request.endpoint %}
+{% set brand = g.shop['name'] if g.shop else 'Sunaar Admin' %}
+<div class="topbar">
+  <div class="brand" style="padding:0;border:0">
+    <div class="hallmark" aria-hidden="true">{{ brand[:1]|upper }}</div>
+    <div class="brand-name">{{ brand }}</div>
+  </div>
+  <button class="menu-btn" type="button" aria-label="Menu kholein" onclick="document.body.classList.toggle('menu-open')">{{ icon('menu') }}</button>
+</div>
+<div class="scrim" onclick="document.body.classList.remove('menu-open')"></div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="hallmark" aria-hidden="true">{{ brand[:1]|upper }}</div>
+      <div>
+        <div class="brand-name">{{ brand }}</div>
+        <div class="brand-sub">{% if role == 'superadmin' %}Aapka control panel{% else %}Gold loan ka hisaab{% endif %}</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Main">
+      {% if role == 'superadmin' %}
+        <a href="{{ url_for('admin_home') }}" class="{{ 'active' if ep == 'admin_home' }}">{{ icon('shop') }} Sabhi shops</a>
+        <a href="{{ url_for('admin_new_shop') }}" class="{{ 'active' if ep == 'admin_new_shop' }}">{{ icon('plus') }} Nayi shop</a>
+      {% else %}
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if ep == 'dashboard' }}">{{ icon('home') }} Dashboard</a>
+        <a href="{{ url_for('new_loan') }}" class="{{ 'active' if ep == 'new_loan' }}">{{ icon('plus') }} New loan</a>
+        <a href="{{ url_for('search') }}" class="{{ 'active' if ep == 'search' }}">{{ icon('search') }} Search</a>
+        <a href="{{ url_for('all_loans') }}" class="{{ 'active' if ep in ('all_loans', 'view_loan', 'receipt') }}">{{ icon('list') }} All loans</a>
+        {% if role == 'owner' %}
+        <a href="{{ url_for('team') }}" class="{{ 'active' if ep == 'team' }}">{{ icon('users') }} Staff</a>
+        <a href="{{ url_for('settings') }}" class="{{ 'active' if ep == 'settings' }}">{{ icon('settings') }} Shop details</a>
+        {% endif %}
+      {% endif %}
+      <a href="{{ url_for('account') }}" class="{{ 'active' if ep == 'account' }}">{{ icon('key') }} My password</a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="who">{{ g.user['full_name'] }}</div>
+      <div class="who-role">{% if role == 'superadmin' %}Super admin{% elif role == 'owner' %}Shop owner{% else %}Staff{% endif %}</div>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row"><button type="submit">Logout</button></div>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% if role == 'owner' %}
+      {% set dl = days_left(g.shop) %}
+      {% if dl is not none and dl <= 7 %}
+        <div class="notice warning" role="status">
+          Aapka subscription {% if dl <= 0 %}aaj{% else %}{{ dl }} din mein{% endif %} khatam ho raha hai ({{ fdate(g.shop['valid_until']) }}).
+          Chalte rehne ke liye renew karwayein{% if config.SUPPORT_CONTACT %}: <strong>{{ config.SUPPORT_CONTACT }}</strong>{% endif %}.
+        </div>
+      {% endif %}
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="notice {{ category }}" role="status">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block public %}{% endblock %}
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

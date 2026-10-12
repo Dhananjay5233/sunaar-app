@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, loan_table %}
+{% block title %}Search - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Customer search</h1>
+    <p>Mobile number, name ya loan number se.</p>
+  </div>
+</div>
+
+<section class="lookup" aria-label="Khoj">
+  <form action="{{ url_for('search') }}" method="get" style="margin-top:0">
+    <input type="search" name="q" value="{{ q }}" inputmode="tel" placeholder="Jaise 98765 43210" aria-label="Mobile number ya naam" autocomplete="off" autofocus>
+    <button class="btn btn-primary" type="submit">{{ icon('search') }} Search</button>
+  </form>
+</section>
+
+{% if summary %}
+<div class="strip" style="grid-template-columns: 1.4fr repeat(3, 1fr)">
+  <div><div class="fig" style="font-size:24px">{{ summary.name }}</div><div class="lbl">{{ summary.mobile }}</div></div>
+  <div><div class="fig">{{ summary.active }}<small>/ {{ summary.total }}</small></div><div class="lbl">Current loans</div></div>
+  <div><div class="fig">Rs {{ money(summary.amount) }}</div><div class="lbl">Mool raqam</div></div>
+  <div><div class="fig">Rs {{ money(summary.payable) }}</div><div class="lbl">Total due</div></div>
+</div>
+{% endif %}
+
+{% if q %}
+  {% if results %}
+    <p class="muted" style="margin-bottom:12px">"{{ q }}" ke liye {{ results|length }} record mile.</p>
+    {{ loan_table(results, True) }}
+  {% else %}
+    <div class="table-wrap"><div class="empty"><strong>"{{ q }}" ka koi record nahin mila</strong>Number dobara check karein ya <a href="{{ url_for('new_loan') }}">naya loan banayein</a>.</div></div>
+  {% endif %}
+{% else %}
+  <div class="table-wrap"><div class="empty"><strong>Number daalkar khojein</strong>Customer ke saare loans ek saath dikhenge.</div></div>
+{% endif %}
+
+{% endblock %}

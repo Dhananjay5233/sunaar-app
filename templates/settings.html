@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Shop details - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Shop details</h1>
+    <p>Ye jaankari receipt par chhapti hai.</p>
+  </div>
+</div>
+
+<form method="post" class="sheet" style="max-width:760px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid">
+    <div class="field full"><label for="name">Shop ka naam <span class="req">*</span></label><input id="name" name="name" value="{{ g.shop['name'] }}" required></div>
+    <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" value="{{ g.shop['phone'] or '' }}"></div>
+    <div class="field"><label for="city">Shehar</label><input id="city" name="city" value="{{ g.shop['city'] or '' }}"></div>
+    <div class="field full"><label for="address">Pata</label><textarea id="address" name="address">{{ g.shop['address'] or '' }}</textarea></div>
+    <div class="field"><label for="licence_no">Licence ya GST number</label><input id="licence_no" name="licence_no" value="{{ g.shop['licence_no'] or '' }}"></div>
+  </div>
+  <p class="muted" style="margin-top:18px">Aapka subscription {{ fdate(g.shop['valid_until']) }} tak chalu hai.</p>
+  <div class="actions" style="margin-top:14px"><button class="btn btn-primary" type="submit">Save karein</button></div>
+</form>
+
+{% endblock %}

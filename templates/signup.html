@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Free account banayein - Sunaar{% endblock %}
+{% block public %}
+<div class="login">
+  <section class="login-art">
+    <div class="brand">
+      <div class="hallmark" aria-hidden="true">S</div>
+      <div>
+        <div class="brand-name">Sunaar</div>
+        <div class="brand-sub">Gold loan management</div>
+      </div>
+    </div>
+    <h1>{{ config.TRIAL_DAYS }} din free, apni shop ka poora girvi hisaab.</h1>
+    <ul>
+      <li>Card ya payment ki zaroorat nahin</li>
+      <li>Aapka data sirf aapki shop ko dikhta hai</li>
+      <li>Staff ke alag login, har loan par unka naam</li>
+    </ul>
+  </section>
+
+  <section class="login-form">
+    <div class="box">
+      <h2>Free account banayein</h2>
+      <p class="muted">Ek minute lagega. Baad mein staff aap khud jod sakte hain.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="notice {{ category }}" style="margin-top:18px" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post" autocomplete="on">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="position:absolute;left:-9999px" aria-hidden="true">
+          <label for="website">Website</label>
+          <input id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="shop_name">Shop ka naam <span class="req">*</span></label>
+          <input id="shop_name" name="shop_name" value="{{ form.get('shop_name', '') }}" autocomplete="organization" required autofocus>
+        </div>
+        <div class="field">
+          <label for="owner_name">Aapka naam <span class="req">*</span></label>
+          <input id="owner_name" name="owner_name" value="{{ form.get('owner_name', '') }}" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="phone">Mobile number <span class="req">*</span></label>
+          <input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" title="10 digit mobile number" value="{{ form.get('phone', '') }}" autocomplete="tel" required>
+        </div>
+        <div class="field">
+          <label for="city">Shehar</label>
+          <input id="city" name="city" value="{{ form.get('city', '') }}" autocomplete="address-level2">
+        </div>
+        <div class="field">
+          <label for="username">Username <span class="req">*</span></label>
+          <input id="username" name="username" value="{{ form.get('username', '') }}" autocapitalize="none" autocomplete="username" minlength="3" required>
+          <span class="hint">Letters, numbers, . aur _ hi chalenge.</span>
+        </div>
+        <div class="field">
+          <label for="password">Password <span class="req">*</span></label>
+          <input id="password" name="password" type="password" minlength="6" autocomplete="new-password" required>
+          <span class="hint">Kam se kam 6 character.</span>
+        </div>
+        <div class="field">
+          <label for="confirm_password">Password dobara <span class="req">*</span></label>
+          <input id="confirm_password" name="confirm_password" type="password" minlength="6" autocomplete="new-password" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" style="min-height:48px">Account banayein</button>
+      </form>
+      <p class="muted" style="margin-top:18px">Pehle se account hai? <a href="{{ url_for('login') }}">Login karein</a></p>
+    </div>
+  </section>
+</div>
+{% endblock %}

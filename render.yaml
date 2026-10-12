@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: sunaar-gold-loan
+    runtime: python
+    plan: starter            # persistent disk needs a paid plan
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 4 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SUPERADMIN_PASSWORD
+        sync: false           # set this in the Render dashboard
+      - key: DATABASE_PATH
+        value: /var/data/sunaar.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    disk:
+      name: sunaar-data
+      mountPath: /var/data
+      sizeGB: 2

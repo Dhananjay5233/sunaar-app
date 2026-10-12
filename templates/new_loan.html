@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Naya loan - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Naya loan</h1>
+    <p>Ye loan {{ g.user['full_name'] }} ke naam se likha jayega.</p>
+  </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="sheet">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="section">
+    <h2 class="section-title">Customer</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="customer_name">Customer Name <span class="req">*</span></label>
+        <input id="customer_name" name="customer_name" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="mobile">Mobile number <span class="req">*</span></label>
+        <input id="mobile" name="mobile" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" title="10 digit mobile number" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="father_name">Father or Husband's Name</label>
+        <input id="father_name" name="father_name">
+      </div>
+      <div class="field">
+        <label for="id_proof">ID proof (Aadhaar or PAN)</label>
+        <input id="id_proof" name="id_proof">
+      </div>
+      <div class="field full">
+        <label for="address">Address</label>
+        <textarea id="address" name="address"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Girvi rakha sona</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="item_desc">Gehne ka vivaran <span class="req">*</span></label>
+        <input id="item_desc" name="item_desc" placeholder="Jaise sone ki chain, 2 kangan" required>
+      </div>
+      <div class="field">
+        <label for="item_type">Gold Type</label>
+        <select id="item_type" name="item_type">
+          <option>Chain</option><option>Ring</option><option>Bangle</option><option>Necklace</option>
+          <option>Earrings</option><option>Bracelet</option><option>Coin</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="gross_weight">Kul vazan (gram) <span class="req">*</span></label>
+        <input id="gross_weight" name="gross_weight" type="number" step="0.01" min="0.01" inputmode="decimal" required>
+      </div>
+      <div class="field">
+        <label for="net_weight">Shuddh vazan (gram)</label>
+        <input id="net_weight" name="net_weight" type="number" step="0.01" min="0.01" inputmode="decimal">
+        <span class="hint">Khaali chhodne par kul vazan hi maana jayega.</span>
+      </div>
+      <div class="field">
+        <label for="purity">Karat</label>
+        <select id="purity" name="purity">
+          <option>24K</option><option selected>22K</option><option>20K</option><option>18K</option><option>14K</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="item_count">Kitne tukde</label>
+        <input id="item_count" name="item_count" type="number" value="1" min="1">
+      </div>
+      <div class="field full">
+        <label for="photo">Gehne ki photo</label>
+        <input id="photo" name="photo" type="file" accept="image/*" capture="environment">
+        <span class="hint">Jpg, png ya webp, 5 MB tak.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Loan Details</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="loan_amount">Loan amount (Rs) <span class="req">*</span></label>
+        <input id="loan_amount" name="loan_amount" type="number" min="1" step="1" inputmode="numeric" required>
+      </div>
+      <div class="field">
+        <label for="interest_rate">Interest rate (% per month) <span class="req">*</span></label>
+        <input id="interest_rate" name="interest_rate" type="number" min="0" step="0.1" value="2" inputmode="decimal" required>
+        <div class="estimate" id="estimate" aria-live="polite"></div>
+      </div>
+      <div class="field">
+        <label for="loan_date">Loan date</label>
+        <input id="loan_date" name="loan_date" type="date" value="{{ today }}">
+      </div>
+      <div class="field">
+        <label for="due_date">Due date</label>
+        <input id="due_date" name="due_date" type="date" value="{{ default_due }}">
+      </div>
+      <div class="field full">
+        <label for="notes">Note</label>
+        <textarea id="notes" name="notes"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">{{ icon('check') }} Save Loan</button>
+    <a class="btn btn-ghost" href="{{ url_for('dashboard') }}">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var amt = document.getElementById('loan_amount'), rate = document.getElementById('interest_rate'), out = document.getElementById('estimate');
+  function show() {
+    var a = parseFloat(amt.value), r = parseFloat(rate.value);
+    out.textContent = (a > 0 && r >= 0) ? 'Monthly interest is approximately Rs ' + Math.round(a * r / 100).toLocaleString('en-IN') : '';
+  }
+  amt.addEventListener('input', show); rate.addEventListener('input', show); show();
+})();
+</script>
+{% endblock %}

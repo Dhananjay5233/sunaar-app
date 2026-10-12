@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, stamp %}
+{% block title %}{{ loan.loan_no }} - {{ loan.customer_name }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <a href="{{ url_for('all_loans') }}" class="muted" style="display:inline-flex;gap:4px;align-items:center;margin-bottom:6px">{{ icon('back') }} Sabhi loans</a>
+    <h1>{{ loan.customer_name }}</h1>
+    <p>{{ loan.loan_no }}, {{ loan.mobile }} &nbsp;{{ stamp(loan) }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-ghost" href="{{ url_for('receipt', loan_id=loan.id) }}" target="_blank" rel="noopener">{{ icon('print') }} Receipt</a>
+    <a class="btn btn-ghost" href="{{ url_for('search', q=loan.mobile) }}">Is customer ke sabhi loans{% if other_loans %} ({{ other_loans + 1 }}){% endif %}</a>
+  </div>
+</div>
+
+<div class="detail">
+  <div>
+    <div class="byline">
+      <span>Ye loan <strong>{{ loan.created_by_name }}</strong> ne banaya, {{ fdate(loan.created_at) }}</span>
+      {% if loan.status == 'closed' and loan.closed_by_name %}
+        <span>Close kiya <strong>{{ loan.closed_by_name }}</strong> ne, {{ fdate(loan.closed_date) }}</span>
+      {% endif %}
+    </div>
+
+    <div class="section" style="margin-top:26px">
+      <h2 class="section-title">Customer</h2>
+      <table class="facts">
+        <tr><td>Naam</td><td><strong>{{ loan.customer_name }}</strong></td></tr>
+        <tr><td>Mobile</td><td><a href="tel:{{ loan.mobile }}">{{ loan.mobile }}</a></td></tr>
+        {% if loan.father_name %}<tr><td>Pita ya pati</td><td>{{ loan.father_name }}</td></tr>{% endif %}
+        {% if loan.id_proof %}<tr><td>ID proof</td><td>{{ loan.id_proof }}</td></tr>{% endif %}
+        {% if loan.address %}<tr><td>Pata</td><td>{{ loan.address }}</td></tr>{% endif %}
+      </table>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Girvi rakha sona</h2>
+      <table class="facts">
+        <tr><td>Vivaran</td><td>{{ loan.item_desc }} ({{ loan.item_type }})</td></tr>
+        <tr><td>Kul vazan</td><td>{{ loan.gross_weight }} g</td></tr>
+        <tr><td>Shuddh vazan</td><td>{{ loan.net_weight }} g</td></tr>
+        <tr><td>Karat</td><td>{{ loan.purity }}</td></tr>
+        <tr><td>Tukde</td><td>{{ loan.item_count }}</td></tr>
+      </table>
+      {% if loan.photo %}
+        <img class="photo" src="{{ url_for('loan_photo', loan_id=loan.id) }}" alt="{{ loan.item_desc }} ki photo">
+      {% endif %}
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Loan Details</h2>
+      <table class="facts">
+        <tr><td>Loan amount</td><td><strong>Rs {{ money(loan.loan_amount) }}</strong></td></tr>
+        <tr><td>Interest rate</td><td>{{ loan.interest_rate }}% per month</td></tr>
+        <tr><td>Loan date</td><td>{{ fdate(loan.loan_date) }}</td></tr>
+        <tr><td>Due date</td><td>{{ fdate(loan.due_date) }}</td></tr>
+        {% if loan.notes %}<tr><td>Note</td><td>{{ loan.notes }}</td></tr>{% endif %}
+      </table>
+    </div>
+
+    {% if payments %}
+    <div class="section">
+      <h2 class="section-title">Payments</h2>
+      <div class="table-wrap">
+        <table class="ledger" style="min-width:0">
+          <thead><tr><th>Date</th><th class="num">Amount</th><th>Received by</th></tr></thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td>{{ fdate(p.payment_date) }}{% if p.notes %}<div class="sub">{{ p.notes }}</div>{% endif %}</td>
+              <td class="num strong">Rs {{ money(p.amount) }}</td>
+              <td>{{ p.received_by_name or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if g.user['role'] == 'owner' %}
+    <form method="post" action="{{ url_for('delete_loan', loan_id=loan.id) }}" onsubmit="return confirm('Ye loan hamesha ke liye delete ho jayega. Pakka delete karein?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger btn-sm" type="submit">Loan delete karein</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <aside class="hisaab">
+    <h3>Abhi ka hisaab</h3>
+    <div class="line"><span>{{ interest.days }} din ({{ interest.months }} mahine)</span><span></span></div>
+    <div class="line"><span>Mool raqam</span><strong>Rs {{ money(interest.principal) }}</strong></div>
+    <div class="line"><span>Byaj</span><strong>Rs {{ money(interest.interest) }}</strong></div>
+    {% if interest.paid %}
+    <div class="line"><span>Ab tak mila</span><strong class="paid">- Rs {{ money(interest.paid) }}</strong></div>
+    {% endif %}
+
+    {% if loan.status == 'active' %}
+      <div class="line total"><span>Abhi dena hoga</span><span>Rs {{ money(interest.total) }}</span></div>
+
+      <div class="sep"></div>
+      <form method="post" action="{{ url_for('add_payment', loan_id=loan.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h4>Aanshik payment jodein</h4>
+        <div class="field" style="margin-bottom:8px"><input name="amount" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="Raqam (Rs)" aria-label="Payment raqam" required></div>
+        <div class="inline">
+          <input name="notes" placeholder="Note (zaroori nahin)" aria-label="Note">
+          <button class="btn btn-ghost" type="submit">Jodein</button>
+        </div>
+      </form>
+
+      <form method="post" action="{{ url_for('close_loan', loan_id=loan.id) }}" onsubmit="return confirm('Loan close hoga aur sona customer ko wapas dena hoga. Pakka close karein?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h4>Loan close karein</h4>
+        <div class="field" style="margin-bottom:8px">
+          <label for="close_amt" class="muted" style="font-weight:500">Customer se mili final raqam (Rs)</label>
+          <input id="close_amt" name="amount" type="number" step="0.01" min="0" value="{{ interest.total if interest.total > 0 else 0 }}" required>
+        </div>
+        <button class="btn btn-ok btn-block" type="submit">{{ icon('check') }} Close karke sona wapas karein</button>
+      </form>
+    {% else %}
+      <div class="line total"><span>Close hua, mila</span><span>Rs {{ money(loan.closed_amount) }}</span></div>
+      <p class="muted" style="margin-top:10px">{{ fdate(loan.closed_date) }} ko close hua{% if loan.closed_by_name %}, {{ loan.closed_by_name }} ne{% endif %}.</p>
+    {% endif %}
+  </aside>
+</div>
+
+{% endblock %}

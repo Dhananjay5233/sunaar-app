@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Sabhi shops - Sunaar Admin{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Sabhi shops</h1>
+    <p>Yahan se aap shops banate, renew karte aur band karte hain.</p>
+  </div>
+  <div class="actions"><a class="btn btn-primary" href="{{ url_for('admin_new_shop') }}">{{ icon('plus') }} Nayi shop</a></div>
+</div>
+
+<div class="strip">
+  <div><div class="fig">{{ totals.shops }}</div><div class="lbl">Kul shops</div></div>
+  <div><div class="fig">{{ totals.live }}</div><div class="lbl">Chalu shops</div></div>
+  <div><div class="fig">{{ totals.expiring }}</div><div class="lbl">15 din mein expire hone wali</div></div>
+  <div><div class="fig">{{ totals.loans }}</div><div class="lbl">Kul loans (sabhi shops)</div></div>
+</div>
+
+{% if shops %}
+<div class="table-wrap">
+  <table class="ledger" style="min-width:980px">
+    <thead>
+      <tr><th>Shop</th><th>Owner</th><th class="num">Users</th><th class="num">Loans</th><th class="num">Chalu raqam</th><th>Subscription</th><th>Kaam</th></tr>
+    </thead>
+    <tbody>
+      {% for s in shops %}
+      {% set expired = s.valid_until and s.valid_until < today %}
+      {% set is_soon = s.valid_until and today <= s.valid_until and s.valid_until <= soon %}
+      <tr>
+        <td><span class="strong">{{ s.name }}</span><div class="sub">{{ s.city or '' }}{% if s.city and s.phone %}, {% endif %}{{ s.phone or '' }}</div>
+          {% if s.source == 'signup' %}<div class="sub">Khud sign-up kiya</div>{% endif %}</td>
+        <td>{{ s.owner_name or '-' }}<div class="sub">{{ s.owner_username or '' }}</div></td>
+        <td class="num">{{ s.users_count }}</td>
+        <td class="num">{{ s.loans_count }}</td>
+        <td class="num strong">Rs {{ money(s.active_amount) }}</td>
+        <td>
+          {% if not s.is_active %}<span class="stamp closed">Band</span>
+          {% elif expired %}<span class="stamp overdue">Expire ho gaya</span>
+          {% elif is_soon %}<span class="stamp soon">Jaldi expire</span>
+          {% else %}<span class="stamp live">Chalu</span>{% endif %}
+          <div class="sub">{{ fdate(s.valid_until) }} tak</div>
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('admin_extend_shop', sid=s.id) }}" style="display:flex;gap:6px;margin-bottom:6px">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="months" aria-label="Kitne mahine badhayein" style="min-height:34px;padding:2px 8px;width:auto">
+              <option value="1">1 mahina</option><option value="3">3 mahine</option><option value="6">6 mahine</option><option value="12" selected>12 mahine</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" type="submit">Renew</button>
+          </form>
+          <form method="post" action="{{ url_for('admin_toggle_shop', sid=s.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn {{ 'btn-danger' if s.is_active else 'btn-ok' }} btn-sm" type="submit"
+                    onclick="return confirm('{{ 'Shop band karne par uske sabhi users login nahin kar payenge. Band karein?' if s.is_active else 'Shop dobara chalu karein?' }}')">{{ 'Band karein' if s.is_active else 'Chalu karein' }}</button>
+          </form>
+          <details class="reset">
+            <summary>Owner ka password badlein</summary>
+            <form method="post" action="{{ url_for('admin_reset_owner', sid=s.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="password" minlength="6" placeholder="Naya password" aria-label="Naya password" required>
+              <button class="btn btn-primary btn-sm" type="submit">Save</button>
+            </form>
+          </details>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="table-wrap"><div class="empty"><strong>Abhi koi shop nahin hai</strong><a href="{{ url_for('admin_new_shop') }}">Pehli shop banayein</a> aur owner ko login de dein.</div></div>
+{% endif %}
+
+{% endblock %}

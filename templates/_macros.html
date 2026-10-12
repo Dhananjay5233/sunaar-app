@@ -1,0 +1,62 @@
+{% macro icon(name) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if name == 'home' %}<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>
+{%- elif name == 'plus' %}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'search' %}<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+{%- elif name == 'list' %}<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>
+{%- elif name == 'users' %}<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .6 3.1 2.3 3.5 5.2"/>
+{%- elif name == 'settings' %}<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+{%- elif name == 'key' %}<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/>
+{%- elif name == 'shop' %}<path d="M4 9 5.5 4h13L20 9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5 12v8h14v-8"/>
+{%- elif name == 'menu' %}<path d="M4 7h16M4 12h16M4 17h16"/>
+{%- elif name == 'print' %}<path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/>
+{%- elif name == 'back' %}<path d="M15 5 8 12l7 7"/>
+{%- elif name == 'download' %}<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>
+{%- elif name == 'check' %}<path d="m5 12.5 4.5 4.5L19 7.5"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% macro stamp(loan) -%}
+{%- if loan.status == 'closed' %}<span class="stamp closed">Close</span>
+{%- elif is_overdue(loan) %}<span class="stamp overdue">Overdue</span>
+{%- else %}<span class="stamp active">Chalu</span>{% endif -%}
+{%- endmacro %}
+
+{% macro loan_table(loans, show_creator=True) %}
+{% if loans %}
+<div class="table-wrap">
+  <table class="ledger">
+    <thead>
+      <tr>
+        <th>Loan no.</th>
+        <th>Customer</th>
+        <th>Sona</th>
+        <th class="num">Loan</th>
+        <th class="num">Abhi ka hisaab</th>
+        <th>Due date</th>
+        <th>Status</th>
+        {% if show_creator %}<th>Banaya</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in loans %}
+      {% set ci = calc_interest(l) %}
+      <tr>
+        <td><a class="strong" href="{{ url_for('view_loan', loan_id=l.id) }}">{{ l.loan_no }}</a><div class="sub">{{ fdate(l.loan_date) }}</div></td>
+        <td><a class="strong" href="{{ url_for('view_loan', loan_id=l.id) }}">{{ l.customer_name }}</a><div class="sub">{{ l.mobile }}</div></td>
+        <td>{{ l.item_desc }}<div class="sub">{{ l.gross_weight }} g, {{ l.purity }}</div></td>
+        <td class="num strong">Rs {{ money(l.loan_amount) }}</td>
+        <td class="num">{% if l.status == 'closed' %}<span class="muted">Mila Rs {{ money(l.closed_amount) }}</span>{% else %}<span class="strong">Rs {{ money(ci.total) }}</span>{% endif %}</td>
+        <td>{{ fdate(l.closed_date if l.status == 'closed' else l.due_date) }}</td>
+        <td>{{ stamp(l) }}</td>
+        {% if show_creator %}<td>{{ l.created_by_name }}</td>{% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="table-wrap" style="min-width:0"><div class="empty"><strong>Koi loan nahin mila</strong>Naya loan banane ke liye "Naya loan" par jaayein.</div></div>
+{% endif %}
+{% endmacro %}

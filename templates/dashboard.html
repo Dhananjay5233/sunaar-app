@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, loan_table %}
+{% block title %}Dashboard - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Namaste, {{ g.user['full_name'].split()[0] }}</h1>
+    <p>{% if is_owner %}Poori shop ka hisaab{% else %}Aapke banaye hue loans ka hisaab{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('new_loan') }}">{{ icon('plus') }} Naya loan</a>
+  </div>
+</div>
+
+<section class="lookup" aria-labelledby="lookup-h">
+  <h2 id="lookup-h">Mobile number se khojein</h2><br>
+  <p>10 digit number, customer ka naam ya loan number daalein.</p>
+  <form action="{{ url_for('search') }}" method="get">
+    <input type="search" name="q" inputmode="tel" placeholder="Jaise 98765 43210" aria-label="Mobile number ya naam" autocomplete="off">
+    <button class="btn btn-primary" type="submit">{{ icon('search') }} Khojein</button>
+  </form>
+</section>
+
+<div class="strip">
+  <div><div class="fig">{{ stats.active_count }}</div><div class="lbl">Chalu loans</div></div>
+  <div><div class="fig">Rs {{ money(stats.active_amount) }}</div><div class="lbl">Bahar lagi raqam</div></div>
+  <div><div class="fig">{{ '%.2f'|format(stats.gold_weight) }}<small>g</small></div><div class="lbl">Girvi rakha sona</div></div>
+  <div><div class="fig">{{ stats.closed_count }}</div><div class="lbl">Close ho chuke loans</div></div>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="section">
+      <h2 class="section-title">Due date paas hai ya nikal gayi <small>agle 30 din</small></h2>
+      {% if due %}
+        {{ loan_table(due, is_owner) }}
+      {% else %}
+        <div class="table-wrap"><div class="empty"><strong>Sab theek hai</strong>Agle 30 din mein koi loan due nahin hai.</div></div>
+      {% endif %}
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Haal ke loans <a href="{{ url_for('all_loans') }}" style="font-size:14px">Sabhi dekhein</a></h2>
+      {{ loan_table(recent, is_owner) }}
+    </div>
+  </div>
+
+  <div>
+    <div class="section">
+      <h2 class="section-title">Pichhle 6 mahine mein diya gaya loan</h2>
+      <div class="bars" role="img" aria-label="Mahine ke hisaab se loan ki raqam">
+        {% for c in chart %}
+        <div class="bar" title="{{ c.label }}: Rs {{ money(c.amt) }}, {{ c.n }} loans">
+          <span>{% if c.amt %}{{ money(c.amt) }}{% endif %}</span>
+          <i class="{{ 'zero' if not c.amt }}" style="height: {{ c.pct if c.amt else 1 }}%"></i>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="bar-labels">{% for c in chart %}<div>{{ c.label }}</div>{% endfor %}</div>
+    </div>
+
+    {% if is_owner %}
+    <div class="section">
+      <h2 class="section-title">Staff ka kaam <a href="{{ url_for('team') }}" style="font-size:14px">Staff sambhalein</a></h2>
+      <div class="table-wrap">
+        <table class="ledger" style="min-width:0">
+          <thead><tr><th>Naam</th><th class="num">Loans</th><th class="num">Raqam</th></tr></thead>
+          <tbody>
+            {% for s in staff_stats %}
+            <tr>
+              <td><a class="strong" href="{{ url_for('all_loans', by=s.id) }}">{{ s.full_name }}</a>
+                <div class="sub">{{ 'Owner' if s.role == 'owner' else 'Staff' }}{% if not s.is_active %}, band{% endif %}</div></td>
+              <td class="num">{{ s.total }}<div class="sub">{{ s.active }} chalu</div></td>
+              <td class="num strong">Rs {{ money(s.amount) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

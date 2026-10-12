@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, loan_table %}
+{% block title %}Sabhi loans - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Sabhi loans</h1>
+    <p>{{ loans|length }} loans mile</p>
+  </div>
+  <div class="actions">
+    {% if g.user['role'] == 'owner' %}
+    <a class="btn btn-ghost" href="{{ url_for('export_data') }}">{{ icon('download') }} Backup download</a>
+    {% endif %}
+    <a class="btn btn-primary" href="{{ url_for('new_loan') }}">{{ icon('plus') }} Naya loan</a>
+  </div>
+</div>
+
+<div class="chips">
+  {% for key, label in [('all', 'Sabhi'), ('active', 'Chalu'), ('overdue', 'Overdue'), ('closed', 'Close')] %}
+    <a class="chip {{ 'on' if flt == key }}" href="{{ url_for('all_loans', filter=key, by=by) }}">{{ label }}</a>
+  {% endfor %}
+  <span class="muted" style="margin-left:8px">Kisne banaya:</span>
+  {% if g.user['role'] == 'owner' %}
+    <form method="get" style="display:inline">
+      <input type="hidden" name="filter" value="{{ flt }}">
+      <select name="by" onchange="this.form.submit()" aria-label="Staff chunein">
+        <option value="">Sabhi</option>
+        {% for m in team %}<option value="{{ m.id }}" {{ 'selected' if by == m.id|string }}>{{ m.full_name }}</option>{% endfor %}
+      </select>
+    </form>
+  {% else %}
+    <a class="chip {{ 'on' if by != 'me' }}" href="{{ url_for('all_loans', filter=flt) }}">Sabhi</a>
+    <a class="chip {{ 'on' if by == 'me' }}" href="{{ url_for('all_loans', filter=flt, by='me') }}">Meri</a>
+  {% endif %}
+</div>
+
+{{ loan_table(loans, True) }}
+
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Nayi shop - Sunaar Admin{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Nayi shop</h1>
+    <p>Shop aur uske owner ka login ek saath ban jayega. Owner khud apna staff jod sakta hai.</p>
+  </div>
+</div>
+
+<form method="post" class="sheet" style="max-width:760px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="section">
+    <h2 class="section-title">Shop</h2>
+    <div class="grid">
+      <div class="field"><label for="shop_name">Shop ka naam <span class="req">*</span></label><input id="shop_name" name="shop_name" value="{{ form.get('shop_name', '') }}" required></div>
+      <div class="field"><label for="city">Shehar</label><input id="city" name="city" value="{{ form.get('city', '') }}"></div>
+      <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" value="{{ form.get('phone', '') }}"></div>
+      <div class="field">
+        <label for="months">Subscription</label>
+        <select id="months" name="months">
+          <option value="1">1 mahina</option><option value="3">3 mahine</option><option value="6">6 mahine</option><option value="12" selected>12 mahine</option><option value="24">24 mahine</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Owner ka login</h2>
+    <div class="grid">
+      <div class="field"><label for="owner_name">Owner ka poora naam <span class="req">*</span></label><input id="owner_name" name="owner_name" value="{{ form.get('owner_name', '') }}" required></div>
+      <div class="field"><label for="username">Username <span class="req">*</span></label><input id="username" name="username" value="{{ form.get('username', '') }}" autocapitalize="none" required></div>
+      <div class="field"><label for="password">Password <span class="req">*</span></label><input id="password" name="password" type="text" minlength="6" required><span class="hint">Kam se kam 6 character. Owner ko ye de dein, wo baad mein badal sakta hai.</span></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">Shop banayein</button>
+    <a class="btn btn-ghost" href="{{ url_for('admin_home') }}">Radd karein</a>
+  </div>
+</form>
+
+{% endblock %}

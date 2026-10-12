@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Staff - {{ g.shop['name'] }}{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Staff</h1>
+    <p>Har staff ka apna login hota hai, aur unke banaye loans par unka naam likha aata hai.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="table-wrap">
+    <table class="ledger">
+      <thead><tr><th>Naam</th><th>Username</th><th>Bhumika</th><th class="num">Loans banaye</th><th>Status</th><th>Kaam</th></tr></thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td class="strong">{{ m.full_name }}</td>
+          <td>{{ m.username }}</td>
+          <td>{{ 'Owner' if m.role == 'owner' else 'Staff' }}</td>
+          <td class="num">{{ m.loans_created }}</td>
+          <td>{% if m.is_active %}<span class="stamp live">Chalu</span>{% else %}<span class="stamp closed">Band</span>{% endif %}</td>
+          <td>
+            {% if m.role == 'staff' %}
+            <form method="post" action="{{ url_for('team_toggle', uid=m.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-ghost btn-sm" type="submit">{{ 'Band karein' if m.is_active else 'Chalu karein' }}</button>
+            </form>
+            <details class="reset">
+              <summary>Password badlein</summary>
+              <form method="post" action="{{ url_for('team_reset', uid=m.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="password" minlength="6" placeholder="Naya password" aria-label="Naya password" required>
+                <button class="btn btn-primary btn-sm" type="submit">Save</button>
+              </form>
+            </details>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('team_new') }}" class="sheet" style="max-width:760px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <h2 class="section-title">New Staff</h2>
+  <div class="grid">
+    <div class="field"><label for="full_name">Full Name <span class="req">*</span></label><input id="full_name" name="full_name" required></div>
+    <div class="field"><label for="username">Username <span class="req">*</span></label><input id="username" name="username" autocapitalize="none" required><span class="hint">Letters, numbers, . aur _ hi chalenge.</span></div>
+    <div class="field"><label for="password">Password <span class="req">*</span></label><input id="password" name="password" type="text" minlength="6" required><span class="hint">At least 6 characters.</span></div>
+  </div>
+  <div class="actions" style="margin-top:18px"><button class="btn btn-primary" type="submit">Staff jodein</button></div>
+</form>
+
+{% endblock %}

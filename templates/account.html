@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Mera password{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Mera password</h1>
+    <p>{{ g.user['full_name'] }}, username: {{ g.user['username'] }}</p>
+  </div>
+</div>
+
+<form method="post" class="sheet" style="max-width:480px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid" style="grid-template-columns:1fr">
+    <div class="field"><label for="old_password">Purana password</label><input id="old_password" name="old_password" type="password" autocomplete="current-password" required></div>
+    <div class="field"><label for="new_password">Naya password</label><input id="new_password" name="new_password" type="password" minlength="6" autocomplete="new-password" required><span class="hint">Kam se kam 6 character.</span></div>
+    <div class="field"><label for="confirm_password">Naya password dobara</label><input id="confirm_password" name="confirm_password" type="password" minlength="6" autocomplete="new-password" required></div>
+  </div>
+  <div class="actions" style="margin-top:18px"><button class="btn btn-primary" type="submit">Password badlein</button></div>
+</form>
+
+{% endblock %}

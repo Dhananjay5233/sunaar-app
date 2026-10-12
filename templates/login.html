@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Login - Sunaar{% endblock %}
+{% block public %}
+<div class="login">
+  <section class="login-art">
+    <div class="brand">
+      <div class="hallmark" aria-hidden="true">S</div>
+      <div>
+        <div class="brand-name">Sunaar</div>
+        <div class="brand-sub">Gold loan management</div>
+      </div>
+    </div>
+    <h1>Girvi ka poora hisaab, ek jagah.</h1>
+    <ul>
+      <li>Mobile number daalein, poora record saamne</li>
+      <li>Byaj apne aap, din ke hisaab se</li>
+      <li>Har loan par likha rahega kisne banaya</li>
+    </ul>
+  </section>
+
+  <section class="login-form">
+    <div class="box">
+      <h2>Login karein</h2>
+      <p class="muted">Apna username aur password daalein.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="notice {{ category }}" style="margin-top:18px" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post" autocomplete="on">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" style="min-height:48px">Login</button>
+      </form>
+      {% if config.SIGNUP_ENABLED %}
+      <p class="muted" style="margin-top:18px">Naye hain? <a href="{{ url_for('signup') }}"><strong>{{ config.TRIAL_DAYS }} din ka free account banayein</strong></a></p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

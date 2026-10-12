@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}{% include "_error_body.html" %}{% endblock %}
+{% block public %}<div class="main" style="margin:0 auto">{% include "_error_body.html" %}</div>{% endblock %}

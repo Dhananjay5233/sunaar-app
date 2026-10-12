@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Receipt {{ loan.loan_no }}{% endblock %}
+{% block content %}
+
+<div class="page-head no-print">
+  <div>
+    <a href="{{ url_for('view_loan', loan_id=loan.id) }}" class="muted" style="display:inline-flex;gap:4px;align-items:center;margin-bottom:6px">{{ icon('back') }} Loan par wapas</a>
+    <h1>Receipt</h1>
+  </div>
+  <div class="actions"><button class="btn btn-primary" type="button" onclick="window.print()">{{ icon('print') }} Print karein</button></div>
+</div>
+
+<div class="receipt">
+  <div class="receipt-head">
+    <h2>{{ g.shop['name'] }}</h2>
+    {% if g.shop['address'] or g.shop['city'] %}<p>{{ g.shop['address'] or '' }}{% if g.shop['address'] and g.shop['city'] %}, {% endif %}{{ g.shop['city'] or '' }}</p>{% endif %}
+    {% if g.shop['phone'] %}<p>Phone: {{ g.shop['phone'] }}</p>{% endif %}
+    {% if g.shop['licence_no'] %}<p>Licence: {{ g.shop['licence_no'] }}</p>{% endif %}
+  </div>
+
+  <table class="facts">
+    <tr><td>Loan number</td><td>{{ loan.loan_no }}</td></tr>
+    <tr><td>Loan date</td><td>{{ fdate(loan.loan_date) }}</td></tr>
+    <tr><td>Customer</td><td>{{ loan.customer_name }}</td></tr>
+    <tr><td>Mobile</td><td>{{ loan.mobile }}</td></tr>
+    {% if loan.id_proof %}<tr><td>ID proof</td><td>{{ loan.id_proof }}</td></tr>{% endif %}
+  </table>
+
+  <h3>Girvi rakha sona</h3>
+  <table class="facts">
+    <tr><td>Vivaran</td><td>{{ loan.item_desc }}</td></tr>
+    <tr><td>Vazan, karat</td><td>{{ loan.gross_weight }} g, {{ loan.purity }}</td></tr>
+    <tr><td>Tukde</td><td>{{ loan.item_count }}</td></tr>
+  </table>
+
+  <h3>Loan Details</h3>
+  <table class="facts">
+    <tr><td>Loan amount</td><td>Rs {{ money(loan.loan_amount) }}</td></tr>
+    <tr><td>Interest</td><td>{{ loan.interest_rate }}% per month</td></tr>
+    <tr><td>Due Date</td><td>{{ fdate(loan.due_date) }}</td></tr>
+  </table>
+
+  {% if loan.status == 'closed' %}
+    <div class="grand"><span>Close hua, mila</span><span>Rs {{ money(loan.closed_amount) }}</span></div>
+  {% else %}
+    <table class="facts" style="margin-top:8px">
+      <tr><td>{{ interest.days }} din ka byaj</td><td>Rs {{ money(interest.interest) }}</td></tr>
+      {% if interest.paid %}<tr><td>Ab tak mila</td><td>- Rs {{ money(interest.paid) }}</td></tr>{% endif %}
+    </table>
+    <div class="grand"><span>Abhi dena hoga</span><span>Rs {{ money(interest.total) }}</span></div>
+  {% endif %}
+
+  <div class="sign"><div>Customer's signature</div><div>{{ loan.created_by_name }}, {{ g.shop['name'] }}</div></div>
+  <p class="foot">Receipt {{ now().strftime('%d %b %Y, %H:%M') }} ko nikali gayi. Loan {{ loan.created_by_name }} ne banaya.</p>
+</div>
+
+{% endblock %}

@@ -53,7 +53,7 @@ if IS_PROD:
     if _problems:
         raise RuntimeError('Storage ready nahin hai: ' + '; '.join(_problems) + '. '
                            'Render > Disks mein disk ki Mount Path wahi honi chahiye jo in paths ka folder hai '
-                           '(jaise /var/data), aur instance type paid (Starter ya upar) hona chahiye.')
+                           '(jaise /var/data), aur instance type paid (Starter) hona chahiye.')
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 

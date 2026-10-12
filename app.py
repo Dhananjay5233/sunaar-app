@@ -16,7 +16,15 @@ from flask import (Flask, abort, flash, g, redirect, render_template, request,
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-secret-key-in-production')
+IS_PROD = bool(os.environ.get('RENDER'))   # Render sets RENDER=true on every service
+_secret = os.environ.get('SECRET_KEY')
+if IS_PROD and not _secret:
+    raise RuntimeError('SECRET_KEY environment variable set karna zaroori hai (Render dashboard > Environment).')
+app.config['SECRET_KEY'] = _secret or 'dev-only-secret-key'
+app.config['SESSION_COOKIE_SECURE'] = IS_PROD
+if IS_PROD:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -120,7 +128,12 @@ def init_db():
         c.execute("ALTER TABLE shops ADD COLUMN source TEXT DEFAULT 'admin'")
 
     if c.execute("SELECT COUNT(*) FROM users WHERE role='superadmin'").fetchone()[0] == 0:
-        pw = os.environ.get('SUPERADMIN_PASSWORD', 'super123')
+        pw = os.environ.get('SUPERADMIN_PASSWORD')
+        if not pw:
+            if IS_PROD:
+                raise RuntimeError('SUPERADMIN_PASSWORD environment variable set karna zaroori hai, '
+                                   'warna koi bhi default password se super admin ban jayega.')
+            pw = 'super123'
         c.execute("INSERT INTO users (shop_id, username, full_name, password_hash, role) VALUES (NULL, ?, ?, ?, 'superadmin')",
                   ('superadmin', 'Super Admin', generate_password_hash(pw)))
         print(f"\n*** Super admin created -> username: superadmin  password: {pw}  (CHANGE IT!) ***\n")
@@ -310,6 +323,15 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/healthz')
+def healthz():
+    """Used by Render to know the app (and its database) is up."""
+    conn = get_db()
+    conn.execute('SELECT 1')
+    conn.close()
+    return 'ok', 200
+
+
 _signup_hits = {}   # ip -> [timestamps]; fine for the single-worker setup used here
 
 
@@ -323,7 +345,7 @@ def signup():
     if request.method == 'POST':
         if form.get('website'):                       # honeypot: real people never fill this hidden field
             return redirect(url_for('login'))
-        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+        ip = request.remote_addr or ''   # behind Render, ProxyFix makes this the real client IP
         stamp = datetime.now().timestamp()
         hits = [t for t in _signup_hits.get(ip, []) if stamp - t < 3600]
         if len(hits) >= 5:
@@ -914,5 +936,5 @@ def too_large(e):
 init_db()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5003)),
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)),
             debug=os.environ.get('FLASK_DEBUG', '0') == '1')
